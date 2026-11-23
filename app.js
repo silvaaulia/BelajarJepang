@@ -237,7 +237,6 @@ state.saved = state.saved || [];
 state.quizHistory = state.quizHistory || [];
 state.daily = state.daily || 1;
 state.kotobaStatus = state.kotobaStatus || {};
-state.kotobaImports = state.kotobaImports || {};
 
 let currentLesson = null;
 let quizIndex = 0;
@@ -461,7 +460,6 @@ const kotobaSupplement = [
 ];
 
 function getKotobaWords(index) {
-  const imported = state.kotobaImports[index];
   const parseRows = value => (value || "").split(";").filter(Boolean).map(item => {
     const [kanji,hiragana,romaji,arti,jenis] = item.split("|");
     return [kanji,hiragana,romaji,arti,jenis,"","","","","","",""];
@@ -482,7 +480,7 @@ function getKotobaWords(index) {
     [w[0],w[1],w[2],w[3],w[4],w[5],"",w[6],"","","",""]
   );
   const unique = new Map();
-  [...sourceRows,...originalRows,...katakanaRows,...(imported||[])].forEach(w => unique.set(`${w[0]}|${w[1]}`,w));
+  [...sourceRows,...originalRows,...katakanaRows].forEach(w => unique.set(`${w[0]}|${w[1]}`,w));
   return [...unique.values()];
 }
 
@@ -507,11 +505,10 @@ function renderKotobaChapter(index) {
     <div class="page-heading"><div><h1>Kotoba — Bab ${index+1}</h1><p>${chapterName(index)} · Minna no Nihongo ${index<25?"I":"II"}</p></div>
       <button class="secondary-btn" data-view-bunpou="${index}">Lihat Bunpou Bab ${index+1}</button></div>
     <div class="chapter-strip">${chapters.map((c,i)=>`<button class="chapter-chip ${i===index?"active":""}" data-kotoba-chapter="${i}">Bab ${i+1}</button>`).join("")}</div>
-    <div class="source-note">${words.length} kosakata pendamping orisinal untuk topik Bab ${index+1}; bukan transkripsi atau daftar resmi Minna no Nihongo. Data tambahan yang ditempel akan digabungkan dengan daftar ini.</div>
+    <div class="source-note">${words.length} kosakata pendamping orisinal untuk topik Bab ${index+1}; bukan transkripsi atau daftar resmi Minna no Nihongo.</div>
     <div class="kotoba-layout">
       <section>
-        <div class="kotoba-tools"><input id="kotobaSearch" placeholder="Cari hiragana, kanji, romaji, atau arti..."><select id="kotobaType"><option value="all">Semua jenis</option>${types.map(t=>`<option>${t}</option>`).join("")}</select><button class="secondary-btn" id="toggleKotobaImport">Tambah kosakata</button><button class="primary-btn" id="kotobaExerciseBtn">Latihan Bab</button></div>
-        <section class="panel kotoba-import-panel" id="kotobaImportPanel" hidden style="margin-bottom:12px"><div class="panel-head"><h2>Tempel kosakata yang sudah diverifikasi</h2><button class="secondary-btn" id="closeKotobaImport">Tutup</button></div><p>Masukkan satu kosakata per baris, pisahkan kolom dengan tanda | atau tab. Wajib: Jepang, Hiragana, Romaji, Arti, Jenis. Kolom contoh Jepang, romaji contoh, dan terjemahan boleh ditambahkan.</p><textarea id="kotobaImportText" rows="5" placeholder="日本|にほん|Nihon|Jepang|Kata benda|私は日本へ行きます。|Watashi wa Nihon e ikimasu.|Saya pergi ke Jepang."></textarea><div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="primary-btn" id="saveKotobaImport">Tambahkan ke bab ini</button></div></section>
+        <div class="kotoba-tools"><input id="kotobaSearch" placeholder="Cari hiragana, kanji, romaji, atau arti..."><select id="kotobaType"><option value="all">Semua jenis</option>${types.map(t=>`<option>${t}</option>`).join("")}</select><button class="primary-btn" id="kotobaExerciseBtn">Latihan Bab</button></div>
         <div class="kotoba-table-wrap"><table class="kotoba-table"><thead><tr><th>No.</th><th>Bahasa Jepang (Kanji/Kana)</th><th>Hiragana</th><th>Romaji</th><th>Arti</th><th>Jenis</th></tr></thead><tbody id="kotobaTableBody"></tbody></table></div>
         <div class="panel" style="margin-top:14px"><div class="panel-head"><h2>Pola gabungan Bab ${index+1}</h2></div><p><strong>Contoh:</strong> ${words[0]?.[5] || "Contoh gabungan belum tersedia."}</p><p style="color:var(--muted)">Bunpou: <strong>${chapters[index][1].join(" · ")}</strong></p></div>
       </section>
@@ -520,9 +517,6 @@ function renderKotobaChapter(index) {
   bindKotobaTable();
   renderFlashcard();
   document.getElementById("kotobaExerciseBtn").onclick = renderKotobaExercise;
-  document.getElementById("toggleKotobaImport").onclick=()=>{document.getElementById("kotobaImportPanel").hidden=false;document.getElementById("kotobaImportText").focus();};
-  document.getElementById("closeKotobaImport").onclick=()=>{document.getElementById("kotobaImportPanel").hidden=true;};
-  document.getElementById("saveKotobaImport").onclick=importKotobaText;
   document.getElementById("shuffleFlashcards").onclick = () => { flashcardQueue.sort(()=>Math.random()-0.5); flashcardIndex=0; flashcardFlipped=false; flashcardAnswerCorrect=false; renderFlashcard(); };
 }
 
@@ -543,28 +537,6 @@ function bindKotobaTable() {
   search.oninput = update;
   type.onchange = update;
   update();
-}
-
-function importKotobaText() {
-  const text=document.getElementById("kotobaImportText").value.trim();
-  const lines=text.split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
-  const rows=[];
-  const invalid=[];
-  lines.forEach((line,index)=>{
-    if(index===0&&/^(bahasa jepang|kanji|jepang)(\||\t)/i.test(line))return;
-    const columns=line.split(line.includes("|")?"|":"\t").map(value=>value.trim());
-    if(columns.length<5||columns.slice(0,5).some(value=>!value)){
-      invalid.push(index+1);
-      return;
-    }
-    rows.push([columns[0],columns[1],columns[2],columns[3],columns[4],columns[5]||"",columns[6]||"",columns[7]||"",columns[8]||"",columns[9]||"",columns[10]||"",columns[11]||""]);
-  });
-  if(invalid.length){toast(`Baris ${invalid.join(", ")} belum lengkap. Periksa lima kolom wajib.`);return;}
-  if(!rows.length){toast("Belum ada kosakata yang dapat ditambahkan.");return;}
-  state.kotobaImports[kotobaChapter]=[...(state.kotobaImports[kotobaChapter]||[]),...rows];
-  saveState();
-  renderKotobaChapter(kotobaChapter);
-  toast(`${rows.length} kosakata ditambahkan ke Bab ${kotobaChapter+1}`);
 }
 
 function showKotobaDetail(wordIndex) {
