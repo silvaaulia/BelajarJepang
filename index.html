@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Platform belajar tata bahasa Jepang Minna no Nihongo Bab 1-50">
+  <title>Minna Nihongo — Belajar Bahasa Jepang</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">日</div>
+      <div><strong>Minna Nihongo</strong><span>Jepang dari dasar</span></div>
+      <button class="icon-btn sidebar-close" id="sidebarClose" aria-label="Tutup menu">×</button>
+    </div>
+    <nav class="main-nav" id="mainNav"></nav>
+    <div class="sidebar-footer">
+      <div class="daily-target">
+        <span>Target hari ini</span><strong id="sidebarTarget">2 / 2 materi</strong>
+        <div class="progress-track"><div id="sidebarTargetBar"></div></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="app-shell">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="Buka menu">☰</button>
+      <div class="search-wrap">
+        <span>⌕</span>
+        <input id="globalSearch" type="search" placeholder="Cari materi atau pola tata bahasa..." autocomplete="off">
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="themeBtn" aria-label="Ubah tema">☼</button>
+      </div>
+    </header>
+
+    <div class="content" id="app"></div>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+  <div class="overlay" id="overlay"></div>
+  <script src="kotoba-pendamping.js"></script>
+  <script src="kotoba-tambahan.js"></script>
+  <script src="kotoba-pengayaan.js"></script>
+  <script src="kamus-dasar.js"></script>
+  <script src="kamus-katakana.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
